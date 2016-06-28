@@ -706,9 +706,9 @@ minetest.register_node(":signs:keyword_sign", {
 	on_construct = function(pos)
 	local meta = minetest.get_meta(pos)
 		if mki_interact_keyword then
-			meta:set_string("text", "\n\n"..mki_interact_keyword)
+			meta:set_string("text", "If you accept the rules open chat and type "..mki_interact_keyword)
 		else
-			meta:set_string("text", "\n\n".."No Keyword")
+			meta:set_string("text", "No Keyword")
 		end
 	end,
 	on_destruct = function(pos)
