@@ -13,10 +13,10 @@
 -- CWz's keyword interact mod uses this setting.
 local current_keyword = minetest.setting_get("interact_keyword") or "iaccept"
 
-signs_lib = {}
+tps_signs = {}
 screwdriver = screwdriver or {}
 
-signs_lib.wallmounted_rotate = function(pos, node, user, mode, new_param2)
+tps_signs.wallmounted_rotate = function(pos, node, user, mode, new_param2)
 	if mode ~= screwdriver.ROTATE_AXIS then return false end
 	minetest.swap_node(pos, {name = node.name, param2 = (node.param2 + 1) % 6})
 	for _, v in ipairs(minetest.get_objects_inside_radius(pos, 0.5)) do
@@ -25,13 +25,13 @@ signs_lib.wallmounted_rotate = function(pos, node, user, mode, new_param2)
 			v:remove()
 		end
 	end
-	signs_lib.update_sign(pos)
+	tps_signs.update_sign(pos)
 	return true
 end
 
-signs_lib.modpath = minetest.get_modpath("signs_lib")
+tps_signs.modpath = minetest.get_modpath("tps_signs")
 
-signs_lib.regular_wall_sign_model = {
+tps_signs.regular_wall_sign_model = {
 	nodebox = {
 		type = "wallmounted",
 		wall_side =   { -0.5,    -0.25,   -0.4375, -0.4375,  0.375,  0.4375 },
@@ -48,7 +48,7 @@ signs_lib.regular_wall_sign_model = {
 	}
 }
 
-signs_lib.metal_wall_sign_model = {
+tps_signs.metal_wall_sign_model = {
 	nodebox = {
 		type = "fixed",
 		fixed = {-0.4375, -0.25, 0.4375, 0.4375, 0.375, 0.5}
@@ -61,7 +61,7 @@ signs_lib.metal_wall_sign_model = {
 	}
 }
 
-signs_lib.yard_sign_model = {
+tps_signs.yard_sign_model = {
 	nodebox = {
 		type = "fixed",
 		fixed = {
@@ -77,7 +77,7 @@ signs_lib.yard_sign_model = {
 	}
 }
 
-signs_lib.hanging_sign_model = {
+tps_signs.hanging_sign_model = {
 	nodebox = {
 		type = "fixed",
 		fixed = {
@@ -93,7 +93,7 @@ signs_lib.hanging_sign_model = {
 	}
 }
 
-signs_lib.sign_post_model = {
+tps_signs.sign_post_model = {
 	nodebox = {
 		type = "fixed",
 		fixed = {
@@ -111,11 +111,11 @@ signs_lib.sign_post_model = {
 
 -- Boilerplate to support localized strings if intllib mod is installed.
 local S = rawget(_G, "intllib") and intllib.Getter() or function(s) return s end
-signs_lib.gettext = S
+tps_signs.gettext = S
 
 -- the list of standard sign nodes
 
-signs_lib.sign_node_list = {
+tps_signs.sign_node_list = {
 		"default:sign_wall_wood",
 		"signs:sign_yard",
 		"signs:sign_hanging",
@@ -127,7 +127,8 @@ signs_lib.sign_node_list = {
 		"signs:sign_wall_orange",
 		"signs:sign_wall_blue",
 		"signs:sign_wall_brown",
-		"locked_sign:sign_wall_locked"
+		"locked_sign:sign_wall_locked",
+		"signs:keyword_sign"
 }
 
 local default_sign, default_sign_image
@@ -143,11 +144,11 @@ end
 
 --table copy
 
-function signs_lib.table_copy(t)
+function tps_signs.table_copy(t)
     local nt = { };
     for k, v in pairs(t) do
         if type(v) == "table" then
-            nt[k] = signs_lib.table_copy(v)
+            nt[k] = tps_signs.table_copy(v)
         else
             nt[k] = v
         end
@@ -158,14 +159,14 @@ end
 -- infinite stacks
 
 if minetest.get_modpath("unified_inventory") or not minetest.setting_getbool("creative_mode") then
-	signs_lib.expect_infinite_stacks = false
+	tps_signs.expect_infinite_stacks = false
 else
-	signs_lib.expect_infinite_stacks = true
+	tps_signs.expect_infinite_stacks = true
 end
 
 -- CONSTANTS
 
-local MP = minetest.get_modpath("signs_lib")
+local MP = minetest.get_modpath("tps_signs")
 
 -- Used by `build_char_db' to locate the file.
 local FONT_FMT = "%s/hdf_%02x.png"
@@ -410,18 +411,18 @@ local function set_obj_text(obj, text, new)
 	})
 end
 
-signs_lib.construct_sign = function(pos, locked)
+tps_signs.construct_sign = function(pos, locked)
     local meta = minetest.get_meta(pos)
 	meta:set_string(
 		"formspec",
 		"size[6,4]"..
 		"textarea[0,-0.3;6.5,3;text;;${text}]"..
 		"button_exit[2,3.4;2,1;ok;Write]"..
-		"background[-0.5,-0.5;7,5;bg_signs_lib.jpg]")
+		"background[-0.5,-0.5;7,5;bg_tps_signs.jpg]")
 	meta:set_string("infotext", "")
 end
 
-signs_lib.destruct_sign = function(pos)
+tps_signs.destruct_sign = function(pos)
     local objects = minetest.get_objects_inside_radius(pos, 0.5)
     for _, v in ipairs(objects) do
 		local e = v:get_luaentity()
@@ -441,7 +442,7 @@ local function make_infotext(text)
 	return table.concat(lines2, "\n")
 end
 
-signs_lib.update_sign = function(pos, fields, owner)
+tps_signs.update_sign = function(pos, fields, owner)
 
 	-- First, check if the interact keyword from CWz's mod is being set,
 	-- or has been changed since the last restart...
@@ -460,7 +461,7 @@ signs_lib.update_sign = function(pos, fields, owner)
 
 		local stored_keyword = meta:get_string("keyword")
 		if stored_keyword and stored_keyword ~= "" and stored_keyword ~= current_keyword then
-			signs_lib.destruct_sign(pos)
+			tps_signs.destruct_sign(pos)
 			meta:set_string("keyword", current_keyword)
 			local ownstr = ""
 			if owner then ownstr = "Locked sign, owned by "..owner.."\n" end
@@ -508,18 +509,22 @@ signs_lib.update_sign = function(pos, fields, owner)
 	local sign_info
 	local signnode = minetest.get_node(pos)
 	if signnode.name == "signs:sign_yard" then
-		sign_info = signs_lib.yard_sign_model.textpos[minetest.get_node(pos).param2 + 1]
+		sign_info = tps_signs.yard_sign_model.textpos[minetest.get_node(pos).param2 + 1]
 	elseif signnode.name == "signs:sign_hanging" then
-		sign_info = signs_lib.hanging_sign_model.textpos[minetest.get_node(pos).param2 + 1]
+		sign_info = tps_signs.hanging_sign_model.textpos[minetest.get_node(pos).param2 + 1]
 	elseif string.find(signnode.name, "sign_wall") then
 		if signnode.name == default_sign
 		  or signnode.name == "locked_sign:sign_wall_locked" then
-			sign_info = signs_lib.regular_wall_sign_model.textpos[minetest.get_node(pos).param2 + 1]
+			sign_info = tps_signs.regular_wall_sign_model.textpos[minetest.get_node(pos).param2 + 1]
 		else
-			sign_info = signs_lib.metal_wall_sign_model.textpos[minetest.get_node(pos).param2 + 1]
+			sign_info = tps_signs.metal_wall_sign_model.textpos[minetest.get_node(pos).param2 + 1]
 		end
+	
+	elseif signnode.name == "signs:keyword_sign" then
+			sign_info = tps_signs.regular_wall_sign_model.textpos[minetest.get_node(pos).param2 + 1]
+		
 	else -- ...it must be a sign on a fence post.
-		sign_info = signs_lib.sign_post_model.textpos[minetest.get_node(pos).param2 + 1]
+		sign_info = tps_signs.sign_post_model.textpos[minetest.get_node(pos).param2 + 1]
 	end
 	if sign_info == nil then
 		return
@@ -532,7 +537,7 @@ end
 
 -- What kind of sign do we need to place, anyway?
 
-function signs_lib.determine_sign_type(itemstack, placer, pointed_thing, locked)
+function tps_signs.determine_sign_type(itemstack, placer, pointed_thing, locked)
 	local name
 	name = minetest.get_node(pointed_thing.under).name
 	if fences_with_sign[name] then
@@ -599,14 +604,14 @@ function signs_lib.determine_sign_type(itemstack, placer, pointed_thing, locked)
 			end
 		end
 
-		if not signs_lib.expect_infinite_stacks then
+		if not tps_signs.expect_infinite_stacks then
 			itemstack:take_item()
 		end
 		return itemstack
 	end
 end
 
-function signs_lib.receive_fields(pos, formname, fields, sender, lock)
+function tps_signs.receive_fields(pos, formname, fields, sender, lock)
 	if minetest.is_protected(pos, sender:get_player_name()) then
 		minetest.record_protection_violation(pos,
 			sender:get_player_name())
@@ -620,9 +625,9 @@ function signs_lib.receive_fields(pos, formname, fields, sender, lock)
 			minetest.pos_to_string(pos)
 		))
 		if lock then
-			signs_lib.update_sign(pos, fields, sender:get_player_name())
+			tps_signs.update_sign(pos, fields, sender:get_player_name())
 		else
-			signs_lib.update_sign(pos, fields)
+			tps_signs.update_sign(pos, fields)
 		end
 	end
 end
@@ -636,26 +641,26 @@ minetest.register_node(":"..default_sign, {
 	paramtype = "light",
 	paramtype2 = "wallmounted",
 	drawtype = "nodebox",
-	node_box = signs_lib.regular_wall_sign_model.nodebox,
+	node_box = tps_signs.regular_wall_sign_model.nodebox,
 	tiles = {"signs_wall_sign.png"},
 	groups = sign_groups,
 
 	on_place = function(itemstack, placer, pointed_thing)
-		return signs_lib.determine_sign_type(itemstack, placer, pointed_thing)
+		return tps_signs.determine_sign_type(itemstack, placer, pointed_thing)
 	end,
 	on_construct = function(pos)
-		signs_lib.construct_sign(pos)
+		tps_signs.construct_sign(pos)
 	end,
 	on_destruct = function(pos)
-		signs_lib.destruct_sign(pos)
+		tps_signs.destruct_sign(pos)
 	end,
 	on_receive_fields = function(pos, formname, fields, sender)
-		signs_lib.receive_fields(pos, formname, fields, sender)
+		tps_signs.receive_fields(pos, formname, fields, sender)
 	end,
 	on_punch = function(pos, node, puncher)
-		signs_lib.update_sign(pos)
+		tps_signs.update_sign(pos)
 	end,
-	on_rotate = signs_lib.wallmounted_rotate
+	on_rotate = tps_signs.wallmounted_rotate
 })
 
 minetest.register_node(":signs:sign_yard", {
@@ -663,7 +668,7 @@ minetest.register_node(":signs:sign_yard", {
 	sunlight_propagates = true,
     paramtype2 = "facedir",
     drawtype = "nodebox",
-    node_box = signs_lib.yard_sign_model.nodebox,
+    node_box = tps_signs.yard_sign_model.nodebox,
 	selection_box = {
 		type = "fixed",
 		fixed = {-0.4375, -0.5, -0.0625, 0.4375, 0.375, 0}
@@ -673,25 +678,90 @@ minetest.register_node(":signs:sign_yard", {
     drop = default_sign,
 
     on_construct = function(pos)
-        signs_lib.construct_sign(pos)
+        tps_signs.construct_sign(pos)
     end,
     on_destruct = function(pos)
-        signs_lib.destruct_sign(pos)
+        tps_signs.destruct_sign(pos)
     end,
 	on_receive_fields = function(pos, formname, fields, sender)
-		signs_lib.receive_fields(pos, formname, fields, sender)
+		tps_signs.receive_fields(pos, formname, fields, sender)
 	end,
 	on_punch = function(pos, node, puncher)
-		signs_lib.update_sign(pos)
+		tps_signs.update_sign(pos)
 	end,
 })
+
+---[[Keyword Sign
+minetest.register_node(":signs:keyword_sign", {
+	description = S("Keyword Sign"),
+	inventory_image = "signs_locked_inv.png",
+	wield_image = "signs_locked_inv.png",
+	node_placement_prediction = "",
+	sunlight_propagates = true,
+	paramtype = "light",
+	paramtype2 = "wallmounted",
+	drawtype = "nodebox",
+	node_box = tps_signs.regular_wall_sign_model.nodebox,
+	tiles = { "signs_wall_sign_locked.png" },
+	groups = {choppy=2, dig_immediate=2, not_in_creative_inventory=0},
+	on_construct = function(pos)
+--		tps_signs.construct_sign(pos, true)
+	local meta = minetest.get_meta(pos)
+	local m = minetest.get_modpath("tps_keyword_interact")
+	local f = io.open(m.. "/keyword.txt", "r")
+	local data = f:read("*a")
+	f:close()
+		if data then
+			meta:set_string("text", "\n\n"..tostring(data))
+		else
+			meta:set_string("text", "\n\n".."No Keyword")
+		end
+	end,
+	on_destruct = function(pos)
+		tps_signs.destruct_sign(pos)
+	end,
+	on_punch = function(pos, node, puncher)
+		tps_signs.update_sign(pos)
+	end,
+	can_dig = function(pos, player)
+		local meta = minetest.get_meta(pos)
+		local owner = meta:get_string("owner")
+		local pname = player:get_player_name()
+		return pname == owner or pname == minetest.setting_get("name")
+			or minetest.check_player_privs(pname, {sign_editor=true})
+	end,
+	on_rotate = tps_signs.wallmounted_rotate,
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		minetest.punch_node(pos)
+	end,
+})
+-- ABM to rest keyword on signs
+minetest.register_abm({
+	nodenames = {"signs:keyword_sign"},
+	interval = 60.0,
+	chance = 1,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		local meta = minetest.get_meta(pos)
+		local key = meta:get_string("text")
+		local m = minetest.get_modpath("tps_keyword_interact")
+		local f = io.open(m.. "/keyword.txt", "r")
+		local data = f:read("*a")
+		f:close()
+		if data ~= key then
+			minetest.set_node(pos, {name = "signs:keyword_sign", param2 = node.param2})
+		else
+			return
+		end
+	end,
+})
+--]]
 
 minetest.register_node(":signs:sign_hanging", {
     paramtype = "light",
 	sunlight_propagates = true,
     paramtype2 = "facedir",
     drawtype = "nodebox",
-    node_box = signs_lib.hanging_sign_model.nodebox,
+    node_box = tps_signs.hanging_sign_model.nodebox,
     selection_box = {
 		type = "fixed",
 		fixed = {-0.45, -0.275, -0.049, 0.45, 0.5, 0.049}
@@ -708,16 +778,16 @@ minetest.register_node(":signs:sign_hanging", {
     drop = default_sign,
 
     on_construct = function(pos)
-        signs_lib.construct_sign(pos)
+        tps_signs.construct_sign(pos)
     end,
     on_destruct = function(pos)
-        signs_lib.destruct_sign(pos)
+        tps_signs.destruct_sign(pos)
     end,
 	on_receive_fields = function(pos, formname, fields, sender)
-		signs_lib.receive_fields(pos, formname, fields, sender)
+		tps_signs.receive_fields(pos, formname, fields, sender)
 	end,
 	on_punch = function(pos, node, puncher)
-		signs_lib.update_sign(pos)
+		tps_signs.update_sign(pos)
 	end,
 })
 
@@ -726,7 +796,7 @@ minetest.register_node(":signs:sign_post", {
 	sunlight_propagates = true,
     paramtype2 = "facedir",
     drawtype = "nodebox",
-    node_box = signs_lib.sign_post_model.nodebox,
+    node_box = tps_signs.sign_post_model.nodebox,
     tiles = {
 		"signs_post_top.png",
 		"signs_post_bottom.png",
@@ -758,17 +828,17 @@ minetest.register_node(":locked_sign:sign_wall_locked", {
 	paramtype = "light",
 	paramtype2 = "wallmounted",
 	drawtype = "nodebox",
-	node_box = signs_lib.regular_wall_sign_model.nodebox,
+	node_box = tps_signs.regular_wall_sign_model.nodebox,
 	tiles = { "signs_wall_sign_locked.png" },
 	groups = sign_groups,
 	on_place = function(itemstack, placer, pointed_thing)
-		return signs_lib.determine_sign_type(itemstack, placer, pointed_thing, true)
+		return tps_signs.determine_sign_type(itemstack, placer, pointed_thing, true)
 	end,
 	on_construct = function(pos)
-		signs_lib.construct_sign(pos, true)
+		tps_signs.construct_sign(pos, true)
 	end,
 	on_destruct = function(pos)
-		signs_lib.destruct_sign(pos)
+		tps_signs.destruct_sign(pos)
 	end,
 	on_receive_fields = function(pos, formname, fields, sender)
 		local meta = minetest.get_meta(pos)
@@ -778,10 +848,10 @@ minetest.register_node(":locked_sign:sign_wall_locked", {
 		  and not minetest.check_player_privs(pname, {sign_editor=true}) then
 			return
 		end
-		signs_lib.receive_fields(pos, formname, fields, sender, true)
+		tps_signs.receive_fields(pos, formname, fields, sender, true)
 	end,
 	on_punch = function(pos, node, puncher)
-		signs_lib.update_sign(pos)
+		tps_signs.update_sign(pos)
 	end,
 	can_dig = function(pos, player)
 		local meta = minetest.get_meta(pos)
@@ -790,7 +860,7 @@ minetest.register_node(":locked_sign:sign_wall_locked", {
 		return pname == owner or pname == minetest.setting_get("name")
 			or minetest.check_player_privs(pname, {sign_editor=true})
 	end,
-	on_rotate = signs_lib.wallmounted_rotate
+	on_rotate = tps_signs.wallmounted_rotate
 })
 
 -- metal, colored signs
@@ -807,7 +877,7 @@ for _, color in ipairs(sign_colors) do
 		sunlight_propagates = true,
 		paramtype2 = "facedir",
 		drawtype = "nodebox",
-		node_box = signs_lib.metal_wall_sign_model.nodebox,
+		node_box = tps_signs.metal_wall_sign_model.nodebox,
 		tiles = {
 			"signs_metal_tb.png",
 			"signs_metal_tb.png",
@@ -818,19 +888,19 @@ for _, color in ipairs(sign_colors) do
 		},
 		groups = sign_groups,
 		on_place = function(itemstack, placer, pointed_thing)
-			return signs_lib.determine_sign_type(itemstack, placer, pointed_thing)
+			return tps_signs.determine_sign_type(itemstack, placer, pointed_thing)
 		end,
 		on_construct = function(pos)
-			signs_lib.construct_sign(pos)
+			tps_signs.construct_sign(pos)
 		end,
 		on_destruct = function(pos)
-			signs_lib.destruct_sign(pos)
+			tps_signs.destruct_sign(pos)
 		end,
 		on_receive_fields = function(pos, formname, fields, sender)
-			signs_lib.receive_fields(pos, formname, fields, sender)
+			tps_signs.receive_fields(pos, formname, fields, sender)
 		end,
 		on_punch = function(pos, node, puncher)
-			signs_lib.update_sign(pos)
+			tps_signs.update_sign(pos)
 		end,
 	})
 end
@@ -857,15 +927,15 @@ minetest.register_entity(":signs:text", {
 
 -- And the good stuff here! :-)
 
-function signs_lib.register_fence_with_sign(fencename, fencewithsignname)
+function tps_signs.register_fence_with_sign(fencename, fencewithsignname)
     local def = minetest.registered_nodes[fencename]
     local def_sign = minetest.registered_nodes[fencewithsignname]
     if not (def and def_sign) then
-        minetest.log("warning", "[signs_lib] Attempt to register unknown node as fence")
+        minetest.log("warning", "[tps_signs] Attempt to register unknown node as fence")
         return
     end
-    def = signs_lib.table_copy(def)
-    def_sign = signs_lib.table_copy(def_sign)
+    def = tps_signs.table_copy(def)
+    def_sign = tps_signs.table_copy(def_sign)
     fences_with_sign[fencename] = fencewithsignname
 
     def_sign.on_place = function(itemstack, placer, pointed_thing, ...)
@@ -890,13 +960,13 @@ function signs_lib.register_fence_with_sign(fencename, fencewithsignname)
 			return def_under.on_rightclick(pointed_thing.under, node_under, placer, itemstack) or itemstack
 		elseif def_under and def_under.buildable_to then
 			minetest.add_node(pointed_thing.under, {name = fencename, param2 = fdir})
-			if not signs_lib.expect_infinite_stacks then
+			if not tps_signs.expect_infinite_stacks then
 				itemstack:take_item()
 			end
 			placer:set_wielded_item(itemstack)
 		elseif def_above and def_above.buildable_to then
 			minetest.add_node(pointed_thing.above, {name = fencename, param2 = fdir})
-			if not signs_lib.expect_infinite_stacks then
+			if not tps_signs.expect_infinite_stacks then
 				itemstack:take_item()
 			end
 			placer:set_wielded_item(itemstack)
@@ -904,16 +974,16 @@ function signs_lib.register_fence_with_sign(fencename, fencewithsignname)
 		return itemstack
 	end
 	def_sign.on_construct = function(pos, ...)
-		signs_lib.construct_sign(pos)
+		tps_signs.construct_sign(pos)
 	end
 	def_sign.on_destruct = function(pos, ...)
-		signs_lib.destruct_sign(pos)
+		tps_signs.destruct_sign(pos)
 	end
 	def_sign.on_receive_fields = function(pos, formname, fields, sender)
-		signs_lib.receive_fields(pos, formname, fields, sender)
+		tps_signs.receive_fields(pos, formname, fields, sender)
 	end
 	def_sign.on_punch = function(pos, node, puncher, ...)
-		signs_lib.update_sign(pos)
+		tps_signs.update_sign(pos)
 	end
 	local fencename = fencename
 	def_sign.after_dig_node = function(pos, node, ...)
@@ -923,7 +993,7 @@ function signs_lib.register_fence_with_sign(fencename, fencewithsignname)
     def_sign.drop = default_sign
 	minetest.register_node(":"..fencename, def)
 	minetest.register_node(":"..fencewithsignname, def_sign)
-	table.insert(signs_lib.sign_node_list, fencewithsignname)
+	table.insert(tps_signs.sign_node_list, fencewithsignname)
 	minetest.log("verbose", S("Registered %s and %s"):format(fencename, fencewithsignname))
 end
 
@@ -932,16 +1002,16 @@ build_char_db()
 minetest.register_alias("homedecor:fence_wood_with_sign", "signs:sign_post")
 minetest.register_alias("sign_wall_locked", "locked_sign:sign_wall_locked")
 
-signs_lib.register_fence_with_sign("default:fence_wood", "signs:sign_post")
+tps_signs.register_fence_with_sign("default:fence_wood", "signs:sign_post")
 
 -- restore signs' text after /clearobjects and the like
 
 minetest.register_abm({
-	nodenames = signs_lib.sign_node_list,
+	nodenames = tps_signs.sign_node_list,
 	interval = 15,
 	chance = 1,
 	action = function(pos, node, active_object_count, active_object_count_wider)
-		signs_lib.update_sign(pos)
+		tps_signs.update_sign(pos)
 	end
 })
 
@@ -1099,3 +1169,5 @@ minetest.register_craft( {
 if minetest.setting_get("log_mods") then
 	minetest.log("action", S("signs loaded"))
 end
+
+
