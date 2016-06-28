@@ -691,7 +691,6 @@ minetest.register_node(":signs:sign_yard", {
 	end,
 })
 
----[[Keyword Sign
 minetest.register_node(":signs:keyword_sign", {
 	description = S("Keyword Sign"),
 	inventory_image = "signs_locked_inv.png",
@@ -703,16 +702,11 @@ minetest.register_node(":signs:keyword_sign", {
 	drawtype = "nodebox",
 	node_box = tps_signs.regular_wall_sign_model.nodebox,
 	tiles = { "signs_wall_sign_locked.png" },
-	groups = {choppy=2, dig_immediate=2, not_in_creative_inventory=0},
+	groups = {choppy=2, dig_immediate=2, not_in_creative_inventory=1},
 	on_construct = function(pos)
---		tps_signs.construct_sign(pos, true)
 	local meta = minetest.get_meta(pos)
-	local m = minetest.get_modpath("tps_keyword_interact")
-	local f = io.open(m.. "/keyword.txt", "r")
-	local data = f:read("*a")
-	f:close()
-		if data then
-			meta:set_string("text", "\n\n"..tostring(data))
+		if mki_interact_keyword then
+			meta:set_string("text", "\n\n"..mki_interact_keyword)
 		else
 			meta:set_string("text", "\n\n".."No Keyword")
 		end
@@ -735,7 +729,7 @@ minetest.register_node(":signs:keyword_sign", {
 		minetest.punch_node(pos)
 	end,
 })
--- ABM to rest keyword on signs
+
 minetest.register_abm({
 	nodenames = {"signs:keyword_sign"},
 	interval = 60.0,
@@ -743,18 +737,12 @@ minetest.register_abm({
 	action = function(pos, node, active_object_count, active_object_count_wider)
 		local meta = minetest.get_meta(pos)
 		local key = meta:get_string("text")
-		local m = minetest.get_modpath("tps_keyword_interact")
-		local f = io.open(m.. "/keyword.txt", "r")
-		local data = f:read("*a")
-		f:close()
+		local data = mki_interact_keyword
 		if data ~= key then
 			minetest.set_node(pos, {name = "signs:keyword_sign", param2 = node.param2})
-		else
-			return
 		end
 	end,
 })
---]]
 
 minetest.register_node(":signs:sign_hanging", {
     paramtype = "light",
