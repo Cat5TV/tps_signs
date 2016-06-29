@@ -746,7 +746,7 @@ minetest.register_node(":signs:keyword_sign", {
 
 minetest.register_abm({
 	nodenames = {"signs:keyword_sign"},
-	interval = 6.0,
+	interval = 60.0,
 	chance = 1,
 	action = function(pos, node, active_object_count, active_object_count_wider)
 		local meta = minetest.get_meta(pos)
