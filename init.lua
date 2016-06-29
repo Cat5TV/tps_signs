@@ -691,10 +691,10 @@ minetest.register_node(":signs:sign_yard", {
 	end,
 })
 
-local tps_sign_text = tostring(minetest.setting_get("tps_signs_text")) or "Open chat and type -k then press enter"
+local tps_sign_text = tostring(minetest.setting_get("tps_signs_text")) or "Open chat and type -k "
 local tps_signs_text_find = string.find(tps_sign_text,"-k")
 local tps_signs_text_start = "Open chat and type"
-local tps_signs_text_end = "then press enter"
+local tps_signs_text_end = ""
 if tps_signs_text_find ~= nil then
 	tps_signs_text_start = tps_sign_text:sub(1,tonumber(tps_signs_text_find) - 1)
 	tps_signs_text_end = tps_sign_text:sub(tonumber(tps_signs_text_find) + 2)
@@ -717,6 +717,9 @@ minetest.register_node(":signs:keyword_sign", {
 	on_construct = function(pos)
 	local meta = minetest.get_meta(pos)
 		if tst then
+			meta:set_string("keyword",tostring(mki_interact_keyword))
+			local kw = meta:get_string("keyword")
+			tst = tps_signs_text_start.." "..kw.." "..tps_signs_text_end
 			meta:set_string("text",tostring(tst))
 		else
 			meta:set_string("text", "No Keyword")
@@ -743,15 +746,14 @@ minetest.register_node(":signs:keyword_sign", {
 
 minetest.register_abm({
 	nodenames = {"signs:keyword_sign"},
-	interval = 60.0,
+	interval = 6.0,
 	chance = 1,
 	action = function(pos, node, active_object_count, active_object_count_wider)
 		local meta = minetest.get_meta(pos)
-		local key = meta:get_string("text")
-		if tst ~= key then
+		local key = meta:get_string("keyword")
+		local kw = tostring(mki_interact_keyword)
+		if key ~= kw then
 			minetest.set_node(pos, {name = "signs:keyword_sign", param2 = node.param2})
-		else
-			return
 		end
 	end,
 })
