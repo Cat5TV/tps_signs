@@ -691,6 +691,17 @@ minetest.register_node(":signs:sign_yard", {
 	end,
 })
 
+local tps_sign_text = tostring(minetest.setting_get("tps_signs_text")) or "Open chat and type -k then press enter"
+local tps_signs_text_find = string.find(tps_sign_text,"-k")
+local tps_signs_text_start = "Open chat and type"
+local tps_signs_text_end = "then press enter"
+if tps_signs_text_find ~= nil then
+	tps_signs_text_start = tps_sign_text:sub(1,tonumber(tps_signs_text_find) - 1)
+	tps_signs_text_end = tps_sign_text:sub(tonumber(tps_signs_text_find) + 2)
+end
+if tps_signs_text_end == nil then tps_signs_text_end = "" end
+local tst = tps_signs_text_start.." "..mki_interact_keyword.." "..tps_signs_text_end
+
 minetest.register_node(":signs:keyword_sign", {
 	description = S("Keyword Sign"),
 	inventory_image = "signs_locked_inv.png",
@@ -705,8 +716,8 @@ minetest.register_node(":signs:keyword_sign", {
 	groups = {choppy=2, dig_immediate=2, not_in_creative_inventory=1},
 	on_construct = function(pos)
 	local meta = minetest.get_meta(pos)
-		if mki_interact_keyword then
-			meta:set_string("text", "If you accept the rules open chat and type "..mki_interact_keyword)
+		if tst then
+			meta:set_string("text",tostring(tst))
 		else
 			meta:set_string("text", "No Keyword")
 		end
@@ -737,9 +748,10 @@ minetest.register_abm({
 	action = function(pos, node, active_object_count, active_object_count_wider)
 		local meta = minetest.get_meta(pos)
 		local key = meta:get_string("text")
-		local data = mki_interact_keyword
-		if data ~= key then
+		if tst ~= key then
 			minetest.set_node(pos, {name = "signs:keyword_sign", param2 = node.param2})
+		else
+			return
 		end
 	end,
 })
