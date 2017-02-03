@@ -1010,6 +1010,7 @@ tps_signs.register_fence_with_sign("default:fence_wood", "signs:sign_post")
 
 -- restore signs' text after /clearobjects and the like
 
+[[--
 minetest.register_abm({
 	nodenames = tps_signs.sign_node_list,
 	interval = 15,
@@ -1018,6 +1019,7 @@ minetest.register_abm({
 		tps_signs.update_sign(pos)
 	end
 })
+--]]
 
 -- locked sign
 
