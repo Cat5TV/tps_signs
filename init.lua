@@ -487,24 +487,26 @@ tps_signs.update_sign = function(pos, fields, owner)
 		new = (meta:get_int("__signslib_new_format") ~= 0)
 	end
 	local text = meta:get_string("text")
-	if text == nil then return end
+--	if text == nil then return end
 	local objects = minetest.get_objects_inside_radius(pos, 0.5)
 	local found
 	for _, v in ipairs(objects) do
 		local e = v:get_luaentity()
 		if e and e.name == "signs:text" then
-			if found then
+--			if found then
 				v:remove()
-			else
-				set_obj_text(v, text, new)
-				found = true
+--			else
+--				set_obj_text(v, text, new)
+--				found = true
 			end
-		end
+--		end
 	end
-	if found then
-		return
-	end
+--	if found then
+--		return
+--	end
 
+	if text == nil or text == "" then return end
+	
 	-- if there is no entity
 	local sign_info
 	local signnode = minetest.get_node(pos)
