@@ -1009,6 +1009,20 @@ minetest.register_alias("sign_wall_locked", "locked_sign:sign_wall_locked")
 tps_signs.register_fence_with_sign("default:fence_wood", "signs:sign_post")
 
 -- restore signs' text after /clearobjects and the like
+local limit = tonumber(minetest.setting_get("max_objects_per_block"))
+
+minetest.register_abm({
+	label = "Restore sign text",
+	nodenames = tps_signs.sign_node_list,
+	interval = 20,
+	chance = 2,
+	catch_up = false,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		if active_object_count_wider < limit then
+			tps_signs.update_sign(pos)
+		end
+	end
+})
 
 --[[
 minetest.register_abm({
