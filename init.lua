@@ -858,6 +858,7 @@ minetest.register_node(":locked_sign:sign_wall_locked", {
 		tps_signs.update_sign(pos)
 	end,
 	can_dig = function(pos, player)
+		if not player then return end
 		local meta = minetest.get_meta(pos)
 		local owner = meta:get_string("owner")
 		local pname = player:get_player_name()
